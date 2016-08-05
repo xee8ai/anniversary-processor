@@ -1,20 +1,31 @@
 # for each type of yearly anniversary simply add your own group (using [ and ]) – feel free to define your own :-)
 # then create the symbol entry – this later on will be combined with your result entries
-# if you replace the year (yyyy) by for question marks (????) then only the anniversary will be displayed (but without the age)
+# if you replace the year (yyyy) by for question marks (????) then you will get a question mark in display too (to indicate that the year is missing)
+# if you replace the year by xxxx then the year is not importand and will not be calculated
 
 [birthdays]
 symbol = *
 
-Torvalds, Linus = 1969-12-26
+Smith, Tom = 1967-02-27
+
+Jenkins, Bill = 1936-10-02
 
 
-[wedding]
+[obits]
+symbol = †
+
+Jenkins, Bill = 2012-08-08
+
+
+
+[weddings]
 symbol = ∞
 
 Ann + Frank = 1958-06-08
+Frieda + Gisbert = ????-08-13
 
 
 [whatever-you-can-think-about]
 symbol = Π
 
-The incredible day = ????-01-19
+The incredible day = xxxx-01-19

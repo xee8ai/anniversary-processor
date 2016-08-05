@@ -1,0 +1,5 @@
+# add your monthly dates here; the given value is the day where the event occurs
+[to pay]
+symbol = $
+
+rent = 04
