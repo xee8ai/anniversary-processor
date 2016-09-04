@@ -109,6 +109,8 @@ class ShellProcessor(BaseProcessor):
 
         self.lines.append('')
 
+        last_time = ''
+
         for date, entries in sorted(self.data.items()):
 
             if date < last_week:
@@ -118,15 +120,50 @@ class ShellProcessor(BaseProcessor):
                 continue
 
             for entry in entries:
-                self.lines.append('{}:    {}'.format(date, entry))
+
+                if date < today:
+                    cur_time = 'last_week'
+                elif date == today:
+                    cur_time = 'today'
+                elif date <= next_week:
+                    cur_time = 'next_week'
+                else:
+                    cur_time = 'next_month'
+
+                if last_time and last_time != cur_time:
+                    self.lines.append('')
+
+                line = '{}:    {}'.format(date, entry)
+                line = self._prepare_line(line, cur_time)
+
+                self.lines.append(line)
+
+                last_time = cur_time
 
         self.lines.append('')
+
+
+################################################################################
+    def _prepare_line(self, line, line_time):
+        '''Use this method in your derived classes to e.g. colorize the lines.'''
+
+        return line
 
 
 ################################################################################
     def _print(self):
         for line in self.lines:
             print(line)
+
+
+################################################################################
+    def test_output(self):
+
+        testlines = []
+        print(self._prepare_line('last_week', 'last_week'))
+        print(self._prepare_line('today', 'today'))
+        print(self._prepare_line('next_week', 'next_week'))
+        print(self._prepare_line('next_month', 'next_month'))
 
 
 
@@ -138,7 +175,20 @@ class BashProcessor(ShellProcessor):
 
 
 ################################################################################
+    def _prepare_line(self, line, line_time):
+        '''Use this method in your derived classes to e.g. colorize the lines.'''
 
+        colors = {
+                'last_week': '\033[0;31m',
+                'today': '\033[1;31m',
+                'next_week': '\033[0;32m',
+                'next_month': '\033[0;36m',
+                'clear': '\033[0m',
+                }
+
+        line = colors[line_time] + line + colors['clear']
+
+        return line
 
 
 
@@ -168,3 +218,4 @@ if __name__ == '__main__':
         processor = BashProcessor()
 
     processor.run()
+    # processor.test_output()
