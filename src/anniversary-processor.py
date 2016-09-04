@@ -24,8 +24,8 @@ class BaseProcessor():
 
 ################################################################################
     def _set_env(self):
-        print(sys.argv[0])
-        self.config_dir = 'etc'
+        script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        self.config_dir = os.path.join(script_dir[:-3], 'etc')
 
 
 ################################################################################
