@@ -167,7 +167,6 @@ class ShellProcessor(BaseProcessor):
 
 
 
-
 ################################################################################
 ################################################################################
 class BashProcessor(ShellProcessor):
@@ -191,23 +190,53 @@ class BashProcessor(ShellProcessor):
         return line
 
 
+ 
+################################################################################
+################################################################################
+class PowershellProcessor(ShellProcessor):
+    '''This holds the functionality to get anniversaries to your powershell.'''
+
+
+################################################################################
+    def _prepare_line(self, line, line_time):
+        '''Use this method in your derived classes to e.g. colorize the lines.'''
+
+        colors = {
+                'last_week':    'last week    ',
+                'today':        'TODAY!!      ',
+                'next_week':    'next week    ',
+                'next_month':   'next month   ',
+                'clear': '',
+                }
+
+        line = colors[line_time] + line + colors['clear']
+
+        return line
+
+
 
 ################################################################################
 ################################################################################
 ################################################################################
 if __name__ == '__main__':
 
-    modes = ['base', 'bash']
+
+    modes = {
+            'base': 'reads the config',
+            'bash': 'output to bash',
+            'powershell': 'output to powershell',
+            }
 
     usage = [
             '',
-            'Usage: {} [{}]'.format(sys.argv[0], ', '.join(modes)),
+            'Usage: {} [{}]'.format(sys.argv[0], '|'.join(sorted(modes.keys()))),
             '',
-            '   base: reads the config',
-            '   bash: output to bash',
             ]
 
-    if len(sys.argv) != 2 or sys.argv[1] not in modes:
+    for mode in sorted(modes.items()):
+        usage.append('   {}: {}'.format(mode[0], mode[1]))
+
+    if len(sys.argv) != 2 or sys.argv[1] not in modes.keys():
         for l in usage:
             print(l)
         sys.exit(1)
@@ -216,6 +245,8 @@ if __name__ == '__main__':
         processor = BaseProcessor()
     elif sys.argv[1] == 'bash':
         processor = BashProcessor()
+    elif sys.argv[1] == 'powershell':
+        processor = PowershellProcessor()
 
     processor.run()
     # processor.test_output()
