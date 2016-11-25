@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import calendar
 import configparser
 import datetime
 import os.path
@@ -26,6 +27,8 @@ class BaseProcessor():
     def _set_env(self):
         script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.config_dir = os.path.join(script_dir[:-3], 'etc')
+        self.template_dir = os.path.join(script_dir[:-3], 'templates')
+        self.output_dir = os.path.join(script_dir[:-3], 'output')
 
 
 ################################################################################
@@ -190,7 +193,7 @@ class BashProcessor(ShellProcessor):
         return line
 
 
- 
+
 ################################################################################
 ################################################################################
 class PowershellProcessor(ShellProcessor):
@@ -217,6 +220,75 @@ class PowershellProcessor(ShellProcessor):
 
 ################################################################################
 ################################################################################
+class HtmlProcessor(BaseProcessor):
+
+
+################################################################################
+    def run(self):
+        self._read_template()
+
+        for self.year in (2016, 2017):
+            for self.month in range(1, 13):
+                self._create_html()
+                self._write_html('{}-{:02d}'.format(self.year, self.month))
+
+
+################################################################################
+    def _read_template(self):
+        tpl_file = os.path.join(self.template_dir, 'html', 'month.tpl.htm')
+        with open(tpl_file, 'r') as fh:
+            self.template = fh.read()
+
+
+################################################################################
+    def _create_html(self):
+
+        # reset week counter on January
+        if self.month == 1:
+            self.week_number = 0
+
+        tmp = self.template
+        tmp = tmp.replace('###month###', '{}'.format(self.month))
+        tmp = tmp.replace('###year###', '{}'.format(self.year))
+
+        month_matrix = calendar.monthcalendar(self.year, self.month)
+
+        inner_html = []
+        for week in month_matrix:
+
+            # increment week number
+            # if there is a monday in current week or it is January
+            if (week[0] > 0 or self.month == 1):
+                self.week_number += 1
+            inner_html.append('<tr>')
+            inner_html.append('<td><br>{}</td>'.format(self.week_number))  # week number
+            for day in week:
+                line = '<td>'
+                if day > 0:
+                    line += '<div class="inner_head">'
+                    line += '{}'.format(day)
+                    line += '</div>'
+                line += '</td>'
+                inner_html.append(line)
+            inner_html.append('</tr>')
+
+        tmp = tmp.replace('###calendar_data###', '\n'.join(inner_html))
+
+        self.html = tmp
+
+
+################################################################################
+    def _write_html(self, filename):
+        if not filename.endswith('.htm') or not filename.endswith('.html'):
+            filename += '.htm'
+        html_file = os.path.join(self.output_dir, 'html', filename)
+        with open(html_file, 'w') as fh:
+            fh.write(self.html)
+
+
+
+################################################################################
+################################################################################
 ################################################################################
 if __name__ == '__main__':
 
@@ -225,6 +297,7 @@ if __name__ == '__main__':
             'base': 'reads the config',
             'bash': 'output to bash',
             'powershell': 'output to powershell',
+            'html': 'output to HTML files',
             }
 
     usage = [
@@ -247,6 +320,8 @@ if __name__ == '__main__':
         processor = BashProcessor()
     elif sys.argv[1] == 'powershell':
         processor = PowershellProcessor()
+    elif sys.argv[1] == 'html':
+        processor = HtmlProcessor()
 
     processor.run()
     # processor.test_output()

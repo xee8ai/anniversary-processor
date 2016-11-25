@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>test</title>
+	<style>
+		html, body {
+			font-size: 12px;
+			text-align: center;
+		}
+		h1 {
+			font-size: 1.5em;
+			font-weight: bold;
+			text-decoration: underline;
+		}
+		table {
+			border: solid 2px black;
+			border-collapse: collapse;
+			width: 100%;
+		}
+		th {
+			border: solid 1px black;
+			font-size: 1.3em;
+			font-weight: bold;
+			padding: 0.5em;
+			text-align: center;
+			width: 13.5%;
+		}
+		th:first-child {
+			width: 5.5%;
+		}
+		td {
+			border: solid 1px black;
+			font-size: 1em;
+			padding: 0.2em;
+			height: 12ex;
+			vertical-align: top;
+		}
+		div.inner_head {
+			border-bottom: dashed 1px #aaaaaa;
+			text-align: right;
+			font-size: 1.2em;
+			font-weight: bold;
+			padding: 0.1em;
+		}
+		div.inner_content {
+			padding-left: 0.4em;
+		}
+	</style>
+</head>
+<body>
+
+	<h1>###month### ###year###</h1>
+
+	<table>
+		<tr>
+			<th></th>
+			<th>MON</th>
+			<th>TUE</th>
+			<th>WED</th>
+			<th>THU</th>
+			<th>FRI</th>
+			<th>SAT</th>
+			<th>SUN</th>
+		</tr>
+		###calendar_data###
+	</table>
+</body>
+</html>
