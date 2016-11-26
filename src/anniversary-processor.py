@@ -4,6 +4,7 @@ import calendar
 import configparser
 import datetime
 import os.path
+import pdfkit
 import re
 import sys
 from xeeTools import dd, ex_to_str
@@ -322,6 +323,45 @@ class HtmlProcessor(BaseProcessor):
 
 ################################################################################
 ################################################################################
+class PdfProcessor(BaseProcessor):
+
+
+################################################################################
+    def run(self):
+
+        for self.year in (datetime.datetime.now().year, datetime.datetime.now().year + 1):
+            for self.month in range(1, 13):
+                self._make_pdf_from_html()
+
+
+################################################################################
+    def _make_pdf_from_html(self):
+
+
+        html_dir = os.path.join(self.output_dir, 'html', '{}'.format(self.year))
+        pdf_dir = os.path.join(self.output_dir, 'pdf', '{}'.format(self.year))
+        os.makedirs(pdf_dir, exist_ok=True)
+
+        basename = '{}-{:02d}'.format(self.year, self.month)
+
+        html_file = os.path.join(html_dir, basename + '.htm')
+        pdf_file = os.path.join(pdf_dir, basename + '.pdf')
+
+        options = {
+            'page-size': 'A4',
+            'orientation': 'Landscape',
+            'margin-top': '0.7in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.7in',
+            'margin-left': '0.75in',
+            'encoding': 'UTF-8',
+        }
+        pdfkit.from_file(html_file, pdf_file, options=options)
+
+
+
+################################################################################
+################################################################################
 ################################################################################
 if __name__ == '__main__':
 
@@ -331,6 +371,7 @@ if __name__ == '__main__':
             'bash': 'output to bash',
             'powershell': 'output to powershell',
             'html': 'output to HTML files',
+            'pdf': 'output to PDF files (from HTML)',
             }
 
     usage = [
@@ -349,12 +390,20 @@ if __name__ == '__main__':
 
     if sys.argv[1] == 'base':
         processor = BaseProcessor()
+        processor.run()
     elif sys.argv[1] == 'bash':
         processor = BashProcessor()
+        processor.run()
     elif sys.argv[1] == 'powershell':
         processor = PowershellProcessor()
+        processor.run()
     elif sys.argv[1] == 'html':
         processor = HtmlProcessor()
+        processor.run()
+    elif sys.argv[1] == 'pdf':
+        processor = HtmlProcessor()
+        processor.run()
+        processor = PdfProcessor()
+        processor.run()
 
-    processor.run()
     # processor.test_output()
