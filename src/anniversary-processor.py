@@ -15,6 +15,21 @@ class BaseProcessor():
 
     data = dict()
 
+    month_names = {
+        1: 'January',
+        2: 'February',
+        3: 'March',
+        4: 'April',
+        5: 'May',
+        6: 'June',
+        7: 'July',
+        8: 'August',
+        9: 'September',
+        10: 'October',
+        11: 'November',
+        12: 'December',
+        }
+
 
 ################################################################################
     def __init__(self):
@@ -227,7 +242,7 @@ class HtmlProcessor(BaseProcessor):
     def run(self):
         self._read_template()
 
-        for self.year in (2016, 2017):
+        for self.year in (datetime.datetime.now().year, datetime.datetime.now().year + 1):
             for self.month in range(1, 13):
                 self._create_html()
                 self._write_html('{}-{:02d}'.format(self.year, self.month))
@@ -248,7 +263,7 @@ class HtmlProcessor(BaseProcessor):
             self.week_number = 0
 
         tmp = self.template
-        tmp = tmp.replace('###month###', '{}'.format(self.month))
+        tmp = tmp.replace('###month###', '{}'.format(self.month_names[self.month]))
         tmp = tmp.replace('###year###', '{}'.format(self.year))
 
         month_matrix = calendar.monthcalendar(self.year, self.month)
@@ -256,20 +271,36 @@ class HtmlProcessor(BaseProcessor):
         inner_html = []
         for week in month_matrix:
 
-            # increment week number
-            # if there is a monday in current week or it is January
-            if (week[0] > 0 or self.month == 1):
+            # special case: first calendar week: number 1 is the week containing the first thursday (https://de.wikipedia.org/wiki/Woche#Z.C3.A4hlweise_nach_ISO_8601)
+            if self.week_number == 0:
+                if week[3] > 0:
+                    self.week_number = 1
+            # if there is a monday in current week: increment
+            elif week[0] > 0:
                 self.week_number += 1
+
             inner_html.append('<tr>')
-            inner_html.append('<td><br>{}</td>'.format(self.week_number))  # week number
+            inner_html.append('<td><br>')
+            if self.week_number > 0:
+                inner_html.append('{}'.format(self.week_number))  # week number
+            inner_html.append('</td>')
+
             for day in week:
                 line = '<td>'
                 if day > 0:
                     line += '<div class="inner_head">'
                     line += '{}'.format(day)
                     line += '</div>'
+
+                    cur_date = '{}-{:02d}-{:02d}'.format(self.year, self.month, day)
+                    if cur_date in self.data.keys():
+                        line += '<div class="inner_content">'
+                        line += '<br>'.join(self.data[cur_date])
+                        line += '</div>'
+
                 line += '</td>'
                 inner_html.append(line)
+
             inner_html.append('</tr>')
 
         tmp = tmp.replace('###calendar_data###', '\n'.join(inner_html))
@@ -281,7 +312,9 @@ class HtmlProcessor(BaseProcessor):
     def _write_html(self, filename):
         if not filename.endswith('.htm') or not filename.endswith('.html'):
             filename += '.htm'
-        html_file = os.path.join(self.output_dir, 'html', filename)
+        html_dir = os.path.join(self.output_dir, 'html', '{}'.format(self.year))
+        os.makedirs(html_dir, exist_ok=True)
+        html_file = os.path.join(html_dir, filename)
         with open(html_file, 'w') as fh:
             fh.write(self.html)
 
