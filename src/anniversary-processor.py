@@ -287,7 +287,7 @@ class HtmlProcessor(BaseProcessor):
                 self.week_number += 1
 
             inner_html.append('<tr>')
-            inner_html.append('<td>')
+            inner_html.append('<td><br><br>')
             if self.week_number > 0:
                 inner_html.append('{}'.format(self.week_number))  # week number
             inner_html.append('</td>')
