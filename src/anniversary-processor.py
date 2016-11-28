@@ -4,10 +4,16 @@ import calendar
 import configparser
 import datetime
 import os.path
-import pdfkit
 import re
+import subprocess
 import sys
 from xeeTools import dd, ex_to_str
+
+try:
+    import pdfkit
+    PDFKIT_IMPORTED = True
+except ImportError as ex:
+    PDFKIT_IMPORTED = False
 
 ################################################################################
 ################################################################################
@@ -281,7 +287,7 @@ class HtmlProcessor(BaseProcessor):
                 self.week_number += 1
 
             inner_html.append('<tr>')
-            inner_html.append('<td><br>')
+            inner_html.append('<td>')
             if self.week_number > 0:
                 inner_html.append('{}'.format(self.week_number))  # week number
             inner_html.append('</td>')
@@ -329,9 +335,19 @@ class PdfProcessor(BaseProcessor):
 ################################################################################
     def run(self):
 
+        if not PDFKIT_IMPORTED:
+            print()
+            print('Error importing pdfkit – cannot create PDF files.')
+            print('Try: pip install pdfkit')
+            print('Exiting…')
+            print()
+            sys.exit(1)
+
         for self.year in (datetime.datetime.now().year, datetime.datetime.now().year + 1):
             for self.month in range(1, 13):
                 self._make_pdf_from_html()
+
+            self._concat_year_pdf()
 
 
 ################################################################################
@@ -356,7 +372,36 @@ class PdfProcessor(BaseProcessor):
             'margin-left': '0.75in',
             'encoding': 'UTF-8',
         }
+
+        print()
+        print('Creating {}'.format(pdf_file))
         pdfkit.from_file(html_file, pdf_file, options=options)
+
+
+################################################################################
+    def _concat_year_pdf(self):
+
+        pdf_dir = os.path.join(self.output_dir, 'pdf', '{}'.format(self.year))
+
+        month_files = []
+        for m in range(1, 13):
+            filename = '{}-{:02d}.pdf'.format(self.year, m)
+            f = os.path.join(pdf_dir, filename)
+            month_files.append(f)
+
+        year_file = os.path.join(pdf_dir, '{}.pdf'.format(self.year))
+
+        cmd = 'pdftk {} cat output {}'.format(' '.join(month_files), year_file)
+
+        print()
+        print('Calling pdftk: {}'.format(cmd))
+        errorcode = subprocess.call(cmd, shell=True)
+
+        if errorcode > 0:
+            print('Error {} calling pdftk – could not concat monthly PDF files'.format(errorcode))
+
+        print()
+
 
 
 
