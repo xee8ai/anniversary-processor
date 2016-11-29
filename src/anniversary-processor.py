@@ -62,9 +62,12 @@ class BaseProcessor():
 ################################################################################
     def _readConfig(self):
         self.config = dict()
-        self.config['monthly'] = configparser.ConfigParser()
+        # using RawConfigParser with optionxform preserves the case
+        self.config['monthly'] = configparser.RawConfigParser()
         self.config['monthly'].read(os.path.join(self.config_dir, 'monthly.cfg'))
-        self.config['yearly'] = configparser.ConfigParser()
+        self.config['monthly'].optionxform = str
+        self.config['yearly'] = configparser.RawConfigParser()
+        self.config['yearly'].optionxform = str
         self.config['yearly'].read(os.path.join(self.config_dir, 'yearly.cfg'))
 
 
@@ -98,8 +101,8 @@ class BaseProcessor():
                     if next_key not in self.data.keys():
                         self.data[next_key] = []
 
-                    cur_data = symbol + '  {}'.format(option.upper())
-                    next_data = symbol + '  {}'.format(option.upper())
+                    cur_data = symbol + '  {}'.format(option)
+                    next_data = symbol + '  {}'.format(option)
 
                     if year_regex.match(tmp[:4]):
                         age = this_year - int(tmp[:4])
