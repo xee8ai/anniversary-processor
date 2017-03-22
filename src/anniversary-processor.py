@@ -305,7 +305,8 @@ class HtmlProcessor(BaseProcessor):
                     cur_date = '{}-{:02d}-{:02d}'.format(self.year, self.month, day)
                     if cur_date in self.data.keys():
                         line += '<div class="inner_content">'
-                        line += '<br>'.join(self.data[cur_date])
+                        tmp_contents = ['<span class="inner_content_marker">{}</span> {}'.format(entry.split(' ')[0], ' '.join(entry.split(' ')[1:])) for entry in self.data[cur_date]]
+                        line += '<br>'.join(tmp_contents)
                         line += '</div>'
 
                 line += '</td>'
