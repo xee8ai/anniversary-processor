@@ -161,7 +161,8 @@ class ShellProcessor(BaseProcessor):
                 if last_time and last_time != cur_time:
                     self.lines.append('')
 
-                line = '{}:    {}'.format(date, entry)
+                date_ext = '{} ({})'.format(date, datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%a'))
+                line = '{}:    {}'.format(date_ext, entry)
                 line = self._prepare_line(line, cur_time)
 
                 self.lines.append(line)
