@@ -337,3 +337,5 @@ tags
 
 etc/*.cfg
 output/*
+pip.list
+pip.freeze
