@@ -2,9 +2,13 @@
 # then create the symbol entry – this later on will be combined with your result entries
 # if you replace the year (yyyy) by for question marks (????) then you will get a question mark in display too (to indicate that the year is missing)
 # if you replace the year by xxxx then the year is not importand and will not be calculated
+#
+# color/bgcolor will be used in HTML/PDF only; defaults to #000000/#ffffff
 
 [birthdays]
 symbol = *
+color = #000000
+bgcolor = #ccffcc
 
 Smith, Tom = 1967-02-27
 
@@ -13,6 +17,8 @@ Jenkins, Bill = 1936-10-02
 
 [obits]
 symbol = †
+color = #000000
+bgcolor = #cccccc
 
 Jenkins, Bill = 2012-08-08
 
@@ -20,6 +26,8 @@ Jenkins, Bill = 2012-08-08
 
 [weddings]
 symbol = ∞
+color = #000000
+bgcolor = #ffcccc
 
 Ann + Frank = 1958-06-08
 Frieda + Gisbert = ????-08-13
@@ -27,5 +35,7 @@ Frieda + Gisbert = ????-08-13
 
 [whatever-you-can-think-about]
 symbol = Π
+color = #ffffff
+bgcolor = #000000
 
 The incredible day = xxxx-01-19

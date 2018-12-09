@@ -88,8 +88,18 @@ class BaseProcessor():
                 else:
                     symbol = '?'
 
+                if self.config[interval].has_option(section, 'color'):
+                    color = self.config[interval].get(section, 'color')
+                else:
+                    color = '#000000'
+
+                if self.config[interval].has_option(section, 'bgcolor'):
+                    bgcolor = self.config[interval].get(section, 'bgcolor')
+                else:
+                    bgcolor = '#ffffff'
+
                 for option in self.config[interval].options(section):
-                    if option ==  'symbol':
+                    if option in ['symbol', 'color', 'bgcolor']:
                         continue
 
                     tmp = self.config[interval].get(section, option)
@@ -101,13 +111,23 @@ class BaseProcessor():
                     if next_key not in self.data.keys():
                         self.data[next_key] = []
 
-                    cur_data = symbol + '  {}'.format(option)
-                    next_data = symbol + '  {}'.format(option)
+                    cur_data = {
+                            'symbol': symbol,
+                            'data': '{}'.format(option),
+                            'color': color,
+                            'bgcolor': bgcolor,
+                            }
+                    next_data = {
+                            'symbol': symbol,
+                            'data': '{}'.format(option),
+                            'color': color,
+                            'bgcolor': bgcolor,
+                            }
 
                     if year_regex.match(tmp[:4]):
                         age = this_year - int(tmp[:4])
-                        cur_data += ' ({})'.format(age)
-                        next_data += ' ({})'.format(age + 1)
+                        cur_data['data'] += ' ({})'.format(age)
+                        next_data['data'] += ' ({})'.format(age + 1)
 
                     self.data[cur_key].append(cur_data)
                     self.data[next_key].append(next_data)
@@ -162,7 +182,7 @@ class ShellProcessor(BaseProcessor):
                     self.lines.append('')
 
                 date_ext = '{} ({})'.format(date, datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%a'))
-                line = '{}:    {}'.format(date_ext, entry)
+                line = '{}:    {} {}'.format(date_ext, entry['symbol'], entry['data'])
                 line = self._prepare_line(line, cur_time)
 
                 self.lines.append(line)
@@ -306,7 +326,7 @@ class HtmlProcessor(BaseProcessor):
                     cur_date = '{}-{:02d}-{:02d}'.format(self.year, self.month, day)
                     if cur_date in self.data.keys():
                         line += '<div class="inner_content">'
-                        tmp_contents = ['<span class="inner_content_marker">{}</span> {}'.format(entry.split(' ')[0], ' '.join(entry.split(' ')[1:])) for entry in self.data[cur_date]]
+                        tmp_contents = ['<span style="color: {}; background-color: {};"><span class="inner_content_marker">{}</span> {}</span>'.format(entry['color'], entry['bgcolor'], entry['symbol'], entry['data']) for entry in self.data[cur_date]]
                         line += '<br>'.join(tmp_contents)
                         line += '</div>'
 
