@@ -469,7 +469,7 @@ class IcalProcessor(BaseProcessor):
                 ical_event.append(f'UID:{event_uuid}')
                 ical_event.append(f'DTSTART;VALUE=DATE:{start}')
                 ical_event.append(f'DTEND;VALUE=DATE:{end}')
-                ical_event.append(f'SUMMARY:{data.replace(",", "")}')
+                ical_event.append(f'SUMMARY:{data}')
 
                 # the reminders: ATM hardcoded
                 # TODO: Make reminder times configurable
