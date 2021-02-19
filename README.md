@@ -14,7 +14,11 @@ This creates HTML files (one per month) containing all anniversaries within a ca
 ### PDF
 This creates printable PDF versions of your HTML files
 
+### ICAL
+This creates .ics files for import to e.g. Thunderbird
+
 ## ToDo
 * Improve this documentation (usage, details)
 * Add samples for a quicker imagination
-* Add processor for ICS to include a year's anniversaries in your calendar (Sunbird, Outlook, etc.)
+* Write tests!
+* Refactor!
