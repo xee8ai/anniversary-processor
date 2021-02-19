@@ -7,6 +7,7 @@ import os.path
 import re
 import subprocess
 import sys
+import uuid
 from xeeTools import dd, ex_to_str
 
 try:
@@ -429,6 +430,95 @@ class PdfProcessor(BaseProcessor):
 
 
 
+################################################################################
+################################################################################
+class IcalProcessor(BaseProcessor):
+    '''This holds the functionality to get anniversaries to an ical file.'''
+
+    ical_events = []
+    ical_file_content = ''
+
+
+################################################################################
+    def run(self):
+        for self.year in (datetime.datetime.now().year, datetime.datetime.now().year + 1):
+            self._create_ical_events()
+            self._create_ical_file_content()
+            self._write_ical_file()
+
+
+################################################################################
+    def _create_ical_events(self):
+        for date, events in self.data.items():
+            for event in events:
+                if not date.startswith(str(self.year)):
+                    continue
+                now = datetime.datetime.now().isoformat()
+                event_uuid = uuid.uuid4()
+                start = date
+                d = datetime.datetime.strptime(date, "%Y-%m-%d")
+                d += datetime.timedelta(days=1)
+                end = d.isoformat()[:10]
+                data = event['symbol'] + ' ' + event['data']
+                ical_event = []
+
+                ical_event.append(f'BEGIN:VEVENT')
+
+                # date and information for the event
+                ical_event.append(f'UID:{event_uuid}')
+                ical_event.append(f'DTSTART;VALUE=DATE:{start}')
+                ical_event.append(f'DTEND;VALUE=DATE:{end}')
+                ical_event.append(f'SUMMARY:{data.replace(",", "")}')
+
+                # the reminders: ATM hardcoded
+                # TODO: Make reminder times configurable
+                ical_event.append(f'BEGIN:VALARM')
+                ical_event.append('ACTION:DISPLAY')
+                # one week before the event
+                ical_event.append('TRIGGER;VALUE=DURATION:-P1W')
+                ical_event.append('DESCRIPTION:REMINDER')
+                ical_event.append('END:VALARM')
+
+                ical_event.append(f'BEGIN:VALARM')
+                ical_event.append('ACTION:DISPLAY')
+                # when the event starts
+                ical_event.append('TRIGGER;VALUE=DURATION:PT0S')
+                ical_event.append('DESCRIPTION:REMINDER')
+                ical_event.append('END:VALARM')
+
+                ical_event.append(f'END:VEVENT')
+
+                ical_event = '\n'.join(ical_event)
+                self.ical_events.append(ical_event)
+
+
+################################################################################
+    def _create_ical_file_content(self):
+        lines = []
+        lines.append('BEGIN:VCALENDAR')
+        lines.append('VERSION:2.0')
+        lines.append('PRODID:anniversary-processor')
+        lines.append('CALSCALE:GREGORIAN')
+        lines.append('METHOD:PUBLISH')
+        lines.append('\n'.join(self.ical_events))
+        lines.append('END:VCALENDAR')
+        self.ical_file_content = '\n'.join(lines)
+
+
+################################################################################
+    def _write_ical_file(self):
+
+        ical_dir = os.path.join(self.output_dir, 'ical', '{}'.format(self.year))
+        os.makedirs(ical_dir, exist_ok=True)
+        filename = f'anniversaries__{self.year}.ics'
+        ical_file = os.path.join(ical_dir, filename)
+        with open(ical_file, 'w') as fh:
+            fh.write(self.ical_file_content)
+
+        pass
+
+
+
 
 ################################################################################
 ################################################################################
@@ -439,9 +529,10 @@ if __name__ == '__main__':
     modes = {
             'base': 'reads the config',
             'bash': 'output to bash',
-            'powershell': 'output to powershell',
             'html': 'output to HTML files',
+            'ical': 'output to ICAL files (e.g. for import to thunderbird)',
             'pdf': 'output to PDF files (from HTML)',
+            'powershell': 'output to powershell',
             }
 
     usage = [
@@ -474,6 +565,9 @@ if __name__ == '__main__':
         processor = HtmlProcessor()
         processor.run()
         processor = PdfProcessor()
+        processor.run()
+    elif sys.argv[1] == 'ical':
+        processor = IcalProcessor()
         processor.run()
 
     # processor.test_output()
