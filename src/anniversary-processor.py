@@ -449,6 +449,7 @@ class IcalProcessor(BaseProcessor):
 
 ################################################################################
     def _create_ical_events(self):
+        self.ical_events = []
         for date, events in self.data.items():
             for event in events:
                 if not date.startswith(str(self.year)):
