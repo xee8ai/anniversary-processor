@@ -8,14 +8,8 @@ import re
 import subprocess
 import sys
 import uuid
+import weasyprint
 from xeeTools import dd, ex_to_str
-
-try:
-    import pdfkit
-
-    PDFKIT_IMPORTED = True
-except ImportError as ex:
-    PDFKIT_IMPORTED = False
 
 
 ################################################################################
@@ -361,14 +355,6 @@ class PdfProcessor(BaseProcessor):
     ############################################################################
     def run(self):
 
-        if not PDFKIT_IMPORTED:
-            print()
-            print("Error importing pdfkit – cannot create PDF files.")
-            print("Try: pip install pdfkit")
-            print("Exiting…")
-            print()
-            sys.exit(1)
-
         for self.year in (
             datetime.datetime.now().year,
             datetime.datetime.now().year + 1,
@@ -390,19 +376,27 @@ class PdfProcessor(BaseProcessor):
         html_file = os.path.join(html_dir, basename + ".htm")
         pdf_file = os.path.join(pdf_dir, basename + ".pdf")
 
-        options = {
-            "page-size": "A4",
-            "orientation": "Landscape",
-            "margin-top": "0.7in",
-            "margin-right": "0.75in",
-            "margin-bottom": "0.7in",
-            "margin-left": "0.75in",
-            "encoding": "UTF-8",
-        }
-
         print()
         print("Creating {}".format(pdf_file))
-        pdfkit.from_file(html_file, pdf_file, options=options)
+
+        # Load HTML file
+        html = weasyprint.HTML(filename=html_file)
+
+        # Define CSS for page size, orientation, and margins
+        # WeasyPrint uses CSS @page rules for layout
+        css = """
+        @page {
+            size: A4 landscape;
+            margin: 0.6in;
+        }
+        """
+
+        # Convert to PDF with custom CSS
+        html.write_pdf(
+            pdf_file,
+            stylesheets=[weasyprint.CSS(string=css)],  # Apply custom CSS
+            presentational_hints=True,  # Optional: better HTML-to-PDF rendering
+        )
 
     ############################################################################
     def _concat_year_pdf(self):
