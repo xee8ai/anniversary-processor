@@ -9,7 +9,7 @@ import subprocess
 import sys
 import uuid
 import weasyprint
-from xeeTools import dd, ex_to_str
+from submodules.xeeTools.xeeTools import dd, ex_to_str
 
 
 ################################################################################

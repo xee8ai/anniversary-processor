@@ -1,0 +1,3 @@
+[submodule "xeeTools"]
+	path = src/submodules/xeeTools
+	url = https://github.com/xee8ai/xeeTools.git
