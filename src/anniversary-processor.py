@@ -8,8 +8,14 @@ import re
 import subprocess
 import sys
 import uuid
-import weasyprint
 from submodules.xeeTools.xeeTools import dd, ex_to_str
+
+try:
+    import weasyprint
+except ModuleNotFoundError:
+    pass
+except Exception as ex:
+    raise ex
 
 
 ################################################################################
@@ -352,6 +358,9 @@ class HtmlProcessor(BaseProcessor):
 ################################################################################
 class PdfProcessor(BaseProcessor):
 
+    html_dir = None
+    pdf_dir = None
+
     ############################################################################
     def run(self):
 
@@ -360,21 +369,30 @@ class PdfProcessor(BaseProcessor):
             datetime.datetime.now().year + 1,
         ):
             for self.month in range(1, 13):
+                self.html_dir = os.path.join(
+                    self.output_dir, "html", "{}".format(self.year)
+                )
+                self.pdf_dir = os.path.join(
+                    self.output_dir, "pdf", "{}".format(self.year)
+                )
                 self._make_pdf_from_html()
 
             self._concat_year_pdf()
 
+            # for some reason the created PDF is looking perfectly fine but once
+            # printed the table only fills a part of the page
+            # converting to PS as a workaround here (that gets printed fine)
+            self._convert_to_ps()
+
     ############################################################################
     def _make_pdf_from_html(self):
 
-        html_dir = os.path.join(self.output_dir, "html", "{}".format(self.year))
-        pdf_dir = os.path.join(self.output_dir, "pdf", "{}".format(self.year))
-        os.makedirs(pdf_dir, exist_ok=True)
+        os.makedirs(self.pdf_dir, exist_ok=True)
 
         basename = "{}-{:02d}".format(self.year, self.month)
 
-        html_file = os.path.join(html_dir, basename + ".htm")
-        pdf_file = os.path.join(pdf_dir, basename + ".pdf")
+        html_file = os.path.join(self.html_dir, basename + ".htm")
+        pdf_file = os.path.join(self.pdf_dir, basename + ".pdf")
 
         print()
         print("Creating {}".format(pdf_file))
@@ -387,7 +405,7 @@ class PdfProcessor(BaseProcessor):
         css = """
         @page {
             size: A4 landscape;
-            margin: 0.6in;
+            margin: 1cm;
         }
         """
 
@@ -401,17 +419,16 @@ class PdfProcessor(BaseProcessor):
     ############################################################################
     def _concat_year_pdf(self):
 
-        pdf_dir = os.path.join(self.output_dir, "pdf", "{}".format(self.year))
-
         month_files = []
         for m in range(1, 13):
             filename = "{}-{:02d}.pdf".format(self.year, m)
-            f = os.path.join(pdf_dir, filename)
+            f = os.path.join(self.pdf_dir, filename)
             month_files.append(f)
 
-        year_file = os.path.join(pdf_dir, "{}.pdf".format(self.year))
+        tmp_year_file = os.path.join("/tmp", "{}.pdf".format(self.year))
+        year_file = os.path.join(self.pdf_dir, "{}.pdf".format(self.year))
 
-        cmd = "pdftk {} cat output {}".format(" ".join(month_files), year_file)
+        cmd = "pdftk {} cat output {}".format(" ".join(month_files), tmp_year_file)
 
         print()
         print("Calling pdftk: {}".format(cmd))
@@ -425,6 +442,42 @@ class PdfProcessor(BaseProcessor):
             )
 
         print()
+
+        cmd = f"pdftk {tmp_year_file} cat 1-endeast output {year_file}".format(
+            " ".join(month_files), year_file
+        )
+
+        print()
+        print("Calling pdftk: {}".format(cmd))
+        errorcode = subprocess.call(cmd, shell=True)
+
+        if errorcode > 0:
+            print(
+                "Error {} calling pdftk – could not concat monthly PDF files".format(
+                    errorcode
+                )
+            )
+
+        print()
+
+    ############################################################################
+    def _convert_to_ps(self):
+
+        pdf2ps = "/usr/bin/pdf2ps"
+
+        for f in os.listdir(self.pdf_dir):
+            if f.endswith(".pdf") and "-" in f:
+                pdf_file = os.path.join(self.pdf_dir, f)
+                ps_file = f"print__{f}".replace(".pdf", ".ps")
+                ps_file = os.path.join(self.pdf_dir, ps_file)
+                cmd = f"{pdf2ps} {pdf_file} {ps_file}"
+
+                print()
+                print(f"Converting to .ps: {cmd}")
+                subprocess.call(cmd, shell=True)
+
+        f = os.path.join(self.pdf_dir, "print__each_month_from_ps_files_one_by_one_to_avoid_problems_with_size")
+        subprocess.call(f"touch {f}", shell="True")
 
 
 ################################################################################
