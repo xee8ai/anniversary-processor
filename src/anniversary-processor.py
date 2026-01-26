@@ -507,10 +507,10 @@ class IcalProcessor(BaseProcessor):
                     continue
                 now = datetime.datetime.now().isoformat()
                 event_uuid = uuid.uuid4()
-                start = date
+                start = date.replace('-', '')
                 d = datetime.datetime.strptime(date, "%Y-%m-%d")
                 d += datetime.timedelta(days=1)
-                end = d.isoformat()[:10]
+                end = d.isoformat()[:10].replace('-', '')
                 data = event["symbol"] + " " + event["data"]
                 ical_event = []
 
